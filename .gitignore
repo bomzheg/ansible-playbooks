@@ -1,6 +1,7 @@
 .idea/
 .venv/
 venv/
+inventory.yaml
 ### Ansible template
 *.retry
 
