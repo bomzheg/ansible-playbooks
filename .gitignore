@@ -1,0 +1,6 @@
+.idea/
+.venv/
+venv/
+### Ansible template
+*.retry
+
