@@ -1,0 +1,22 @@
+- name: Prepare-host
+  hosts: all
+  become: true
+  vars:
+    username: bomzheg
+  tasks:
+    - name: Install ansible requirements
+      ansible.builtin.apt:
+        name: python3-apt
+        update_cache: true
+    - name: Create user
+      ansible.builtin.user:
+        name: "{{ username }}"
+        state: present
+        groups: sudo
+        append: true
+        create_home: true
+    - name: Set authorized key for remote user
+      ansible.posix.authorized_key:
+        user: "{{ username }}"
+        state: present
+        key: "{{ lookup('file', lookup('env', 'HOME') + '~/.ssh/bomzheg.pub') }}"
