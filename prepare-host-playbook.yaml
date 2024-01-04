@@ -1,5 +1,5 @@
 - name: Prepare-host
-  hosts: prepare
+  hosts: new
   become: true
   vars:
     username: bomzheg
@@ -15,11 +15,15 @@
         regexp: '^%sudo'
         line: '%sudo ALL=(ALL) NOPASSWD: ALL'
         validate: '/usr/sbin/visudo -cf %s'
+    - name: Create docker group
+      ansible.builtin.group:
+        name: docker
+        state: present
     - name: Create user
       ansible.builtin.user:
         name: "{{ username }}"
         state: present
-        groups: sudo
+        groups: [sudo, docker]
         shell: /bin/bash
         append: true
         create_home: true
