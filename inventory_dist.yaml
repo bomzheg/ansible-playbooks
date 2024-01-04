@@ -1,0 +1,11 @@
+new:
+  hosts:
+    some_name:
+      ansible_host: 111.22.33.44
+      ansible_user: root
+      hostname: my_hostname
+prepared:
+  hosts:
+    some_name:
+      ansible_host: 111.22.33.44
+      ansible_user: bomzheg
