@@ -8,6 +8,13 @@
       ansible.builtin.apt:
         name: python3-apt
         update_cache: true
+    - name: Setup passwordless sudo
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'
     - name: Create user
       ansible.builtin.user:
         name: "{{ username }}"
@@ -20,3 +27,21 @@
         user: "{{ username }}"
         state: present
         key: "{{ lookup('file', lookup('env', 'HOME') + '~/.ssh/bomzheg.pub') }}"
+    - name: Install all soft
+      ansible.builtin.apt:
+        pkg:
+          - curl
+          - vim
+          - git
+          - tmux
+          - htop
+    - name: Configure hostname
+      ansible.builtin.hostname:
+        name: "{{ hostname }}"
+
+    - name: Configure hosts file
+      ansible.builtin.lineinfile:
+        dest: /etc/hosts
+        state: present
+        regexp: "^{{ ansible_host }} "
+        line: "{{ ansible_host }} {{ hostname }}"
