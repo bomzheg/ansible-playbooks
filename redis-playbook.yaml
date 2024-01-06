@@ -1,0 +1,8 @@
+- name: Postgres
+  hosts: prepared
+  become: true
+  tasks:
+    - name: Install redis package
+      ansible.builtin.apt:
+        name: redis
+        update_cache: true
