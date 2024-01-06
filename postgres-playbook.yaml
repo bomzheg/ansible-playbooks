@@ -1,0 +1,54 @@
+- name: Postgres
+  hosts: prepared
+  become: true
+  tasks:
+    - name: Add key for Postgres repo
+      ansible.builtin.apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        state: present
+      become: true
+
+    - name: Add Postgres repo to sources list
+      ansible.builtin.apt_repository:
+        repo: 'deb http://apt.postgresql.org/pub/repos/apt/ jammy-pgdg main'
+        state: present
+      become: true
+
+    - name: Install Postgres
+      ansible.builtin.apt:
+        name: postgresql=16+256.pgdg22.04+1
+        update_cache: true
+
+    - name: Run Postgres
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+        enabled: true
+
+    - name: Configure Postgres. Set listen_addresses.
+      ansible.builtin.lineinfile:
+        dest: /etc/postgresql/16/main/postgresql.conf
+        regexp: "listen_addresses ="
+        line: "listen_addresses = '*'"
+        state: present
+      notify: Restart postgresql
+
+    - name: Configure Postgres. Set pg_hba
+      community.postgresql.postgresql_pg_hba:
+        dest: /etc/postgresql/16/main/pg_hba.conf
+        address: "172.17.0.0/14"
+        contype: host
+        backup: true
+        rules_behavior: combine
+        rules:
+          - users: changebot
+            databases: changebot
+          - users: karmabot
+            databases: karmabot
+      notify: Restart postgresql
+
+  handlers:
+    - name: Restart postgresql
+      ansible.builtin.service:
+        name: postgresql
+        state: restarted
