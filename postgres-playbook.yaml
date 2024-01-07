@@ -45,6 +45,8 @@
             databases: changebot
           - users: karmabot
             databases: karmabot
+          - users: shvatka
+            databases: shvatka
       notify: Restart postgresql
 
   handlers:
