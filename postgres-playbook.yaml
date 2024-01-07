@@ -36,7 +36,7 @@
     - name: Configure Postgres. Set pg_hba
       community.postgresql.postgresql_pg_hba:
         dest: /etc/postgresql/16/main/pg_hba.conf
-        address: "172.17.0.0/14"
+        address: "172.17.0.0/12"
         contype: host
         backup: true
         rules_behavior: combine
@@ -45,6 +45,8 @@
             databases: changebot
           - users: karmabot
             databases: karmabot
+          - users: shvatka_test
+            databases: shvatka_test
           - users: shvatka
             databases: shvatka
       notify: Restart postgresql
