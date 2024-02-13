@@ -1,0 +1,3 @@
+collections:
+  - name: victoriametrics.cluster
+    version: 0.45.0

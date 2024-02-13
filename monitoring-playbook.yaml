@@ -1,0 +1,5 @@
+- name: VictoriaMetrics
+  hosts: prepared
+  become: true
+  roles:
+    - victoriametrics.cluster.single
