@@ -1,5 +1,17 @@
 - name: VictoriaMetrics
   hosts: prepared
   become: true
+  vars:
+    victoriametrics_service_args:
+      promscrape.config: /etc/prometheus/prometheus.yaml
+    metric_targets:
+      - job_name: "shvatka-test-api"
+        target: "localhost:8001/api/metrics"
   roles:
     - victoriametrics.cluster.single
+  tasks:
+    - name: Add prometheus config
+      ansible.builtin.template:
+        src: prometheus.j2
+        dest: /etc/prometheus/prometheus.yaml
+        mode: '644'
