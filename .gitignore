@@ -4,4 +4,4 @@ venv/
 inventory.yaml
 ### Ansible template
 *.retry
-
+/galaxy_roles/
