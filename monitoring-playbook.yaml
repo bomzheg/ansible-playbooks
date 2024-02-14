@@ -3,7 +3,12 @@
   become: true
   vars:
     victoriametrics_service_args:
-      promscrape.config: /etc/prometheus/prometheus.yaml
+      "-promscrape.config": /etc/prometheus/prometheus.yaml
+      storageDataPath: "{{ victoriametrics_data_dir }}"
+      selfScrapeInterval: "{{ victoriametrics_self_scrape_interval }}"
+      retentionPeriod: "{{ victoriametrics_retention_period_months }}"
+      maxConcurrentInserts: 32
+      "search.maxUniqueTimeseries": "{{ victoriametrics_search_max_unique_timeseries }}"
     metric_targets:
       - job_name: "shvatka-test-api"
         target: "localhost:8001/api/metrics"
@@ -15,3 +20,4 @@
         src: prometheus.j2
         dest: /etc/prometheus/prometheus.yaml
         mode: '644'
+      notify: Restart VictoriaMetrics service
