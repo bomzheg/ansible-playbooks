@@ -1,2 +1,5 @@
 mock_roles:
   - "victoriametrics.cluster.single"
+  - "0x0I.grafana"
+exclude_paths:
+  - "galaxy_roles/"

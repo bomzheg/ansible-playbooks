@@ -21,3 +21,27 @@
         dest: /etc/prometheus/prometheus.yaml
         mode: '644'
       notify: Restart VictoriaMetrics service
+- name: Grafana
+  hosts: prepared
+  become: true
+  roles:
+    - role: 0x0I.grafana
+      vars:
+        install_type: package  # noqa: var-naming[no-role-prefix]
+        package_url: https://dl.grafana.com/oss/release/grafana_10.3.3_amd64.deb  # noqa: var-naming[no-role-prefix]
+        package_checksum: '68946eb04f5504e4a28f4872fac3a8de3bafd751b2d7698c7770c320f1676473'  # noqa: var-naming[no-role-prefix]
+
+        grafana_config:
+          security:
+            admin_user: bomzheg
+            admin_password: password
+            login_remember_days: 7
+          dashboards:
+            versions_to_keep: 5
+
+        grafana_datasources:
+          - name: victoriametrics-nemesis
+            datasources:
+              type: prometheus
+              access: proxy
+              url: http://localhost:8428
