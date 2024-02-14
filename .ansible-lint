@@ -3,4 +3,4 @@ mock_roles:
   - "0x0I.grafana"
   - "prometheus.prometheus.node_exporter"
 exclude_paths:
-  - "galaxy_roles/"
+  - "galaxy/"
