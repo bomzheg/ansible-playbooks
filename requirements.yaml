@@ -6,3 +6,5 @@ collections:
 roles:
   - name: 0x0i.grafana
     version: v0.1.0
+  - name: ome.cadvisor
+    version: 0.5.0

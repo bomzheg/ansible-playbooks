@@ -14,6 +14,8 @@
         target: "localhost:8001/api/metrics"
       - job_name: "node-exporter-nemesis"
         target: "localhost:9100/metrics"
+      - job_name: "cadvisor-nemesis"
+        target: "localhost:9280/metrics"
   roles:
     - victoriametrics.cluster.single
   tasks:
@@ -57,3 +59,12 @@
       vars:
         node_exporter_web_listen_address: "localhost:9100"
         node_exporter_version: "1.7.0"
+- name: Cadvisor
+  hosts: prepared
+  roles:
+    - role: ome.cadvisor
+      vars:
+        cadvisor_port: 9280
+        cadvisor_version: v0.47.2
+        cadvisor_url: https://github.com/google/cadvisor/releases/download
+  tags: cadvisor
