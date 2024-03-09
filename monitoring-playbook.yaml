@@ -28,6 +28,7 @@
 - name: Grafana
   hosts: prepared
   become: true
+  tags: grafana
   roles:
     - role: 0x0I.grafana
       vars:
