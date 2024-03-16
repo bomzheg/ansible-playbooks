@@ -1,0 +1,57 @@
+- name: Firewall
+  hosts: prepared
+  become: true
+  tasks:
+    - name: Allow output
+      ansible.builtin.iptables:
+        chain: OUTPUT
+        jump: ACCEPT
+
+    - name: Allow ssh and https
+      ansible.builtin.iptables:
+        chain: INPUT
+        destination_ports:
+          - "22"
+          - "80"
+          - "443"
+        protocol: tcp
+        jump: ACCEPT
+
+    - name: Allow established
+      ansible.builtin.iptables:
+        chain: INPUT
+        ctstate: ESTABLISHED,RELATED
+        jump: ACCEPT
+
+    - name: Allow docker
+      ansible.builtin.iptables:
+        chain: INPUT
+        in_interface: docker0
+        jump: ACCEPT
+
+    - name: Allow established docker
+      ansible.builtin.iptables:
+        chain: DOCKER-USER
+        ctstate: ESTABLISHED,RELATED
+        jump: ACCEPT
+
+    - name: Allow docker bridge
+      ansible.builtin.iptables:
+        chain: INPUT
+        in_interface: br+
+        protocol: tcp
+        destination_ports:
+          - "5432"
+          - "6379"
+        jump: ACCEPT
+
+    - name: Allow lo
+      ansible.builtin.iptables:
+        chain: INPUT
+        in_interface: lo
+        jump: ACCEPT
+
+    - name: Block any other ports
+      ansible.builtin.iptables:
+        chain: INPUT
+        jump: DROP
