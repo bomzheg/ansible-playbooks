@@ -50,3 +50,38 @@
         state: present
         regexp: "^{{ ansible_host }} "
         line: "{{ ansible_host }} {{ hostname }}"
+
+    - name: Allow output
+      ansible.builtin.iptables:
+        chain: OUTPUT
+        jump: ACCEPT
+      become: true
+
+    - name: Allow ssh and https
+      ansible.builtin.iptables:
+        chain: INPUT
+        destination_ports:
+          - "22"
+          - "80"
+          - "443"
+        protocol: tcp
+        jump: ACCEPT
+      become: true
+
+    - name: Allow established
+      ansible.builtin.iptables:
+        chain: INPUT
+        ctstate: ESTABLISHED,RELATED
+        jump: ACCEPT
+
+    - name: Allow lo
+      ansible.builtin.iptables:
+        chain: INPUT
+        in_interface: lo
+        jump: ACCEPT
+
+    - name: Block any other ports
+      ansible.builtin.iptables:
+        chain: INPUT
+        jump: DROP
+      become: true
