@@ -10,6 +10,8 @@
       maxConcurrentInserts: 32
       "search.maxUniqueTimeseries": "{{ victoriametrics_search_max_unique_timeseries }}"
     metric_targets:
+      - job_name: "shvatka-api"
+        target: "localhost:8002/api/metrics"
       - job_name: "shvatka-test-api"
         target: "localhost:8001/api/metrics"
       - job_name: "node-exporter-nemesis"
@@ -20,6 +22,8 @@
     - victoriametrics.cluster.single
   tasks:
     - name: Add prometheus config
+      tags:
+        - victoria
       ansible.builtin.template:
         src: prometheus.j2
         dest: /etc/prometheus/prometheus.yaml
