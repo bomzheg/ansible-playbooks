@@ -34,6 +34,8 @@
       notify: Restart postgresql
 
     - name: Configure Postgres. Set pg_hba
+      tags: 
+        - pg_hba
       community.postgresql.postgresql_pg_hba:
         dest: /etc/postgresql/16/main/pg_hba.conf
         address: "172.17.0.0/12"
@@ -49,6 +51,8 @@
             databases: shvatka_test
           - users: shvatka
             databases: shvatka
+          - users: postgres
+            databases: "all"
       notify: Restart postgresql
 
   handlers:
