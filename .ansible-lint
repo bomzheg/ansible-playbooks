@@ -1,6 +1,6 @@
 mock_roles:
   - "victoriametrics.cluster.single"
-  - "0x0I.grafana"
+  - "0x0i.grafana"
   - "ome.cadvisor"
   - "prometheus.prometheus.node_exporter"
 exclude_paths:
