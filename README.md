@@ -39,3 +39,8 @@ ansible-playbook -i inventory.yaml redis-playbook.yaml
 ```bash
 ansible-playbook -i inventory.yaml metrics-playbook.yaml
 ```
+
+## Run syncthing
+```bash
+ansible-playbook -i inventory.yaml syncthing-playbook.yaml
+```

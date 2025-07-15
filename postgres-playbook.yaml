@@ -34,7 +34,7 @@
       notify: Restart postgresql
 
     - name: Configure Postgres. Set pg_hba
-      tags: 
+      tags:
         - pg_hba
       community.postgresql.postgresql_pg_hba:
         dest: /etc/postgresql/16/main/pg_hba.conf
