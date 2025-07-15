@@ -1,0 +1,26 @@
+- name: Syncthing
+  hosts: prepared
+  become: true
+  tasks:
+    - name: Add key for Syncthing repo
+      ansible.builtin.apt_key:
+        url: https://syncthing.net/release-key.gpg
+        state: present
+      become: true
+
+    - name: Add Syncthing repo to sources list
+      ansible.builtin.apt_repository:
+        repo: 'deb https://apt.syncthing.net/ syncthing stable'
+        state: present
+      become: true
+
+    - name: Install Syncthing
+      ansible.builtin.apt:
+        name: syncthing
+        update_cache: true
+
+    - name: Run Syncthing
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+        enabled: true
