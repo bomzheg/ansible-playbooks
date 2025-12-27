@@ -29,6 +29,10 @@ ansible-playbook -i inventory.yaml docker-playbook.yaml
 ```bash
 ansible-playbook -i inventory.yaml postgres-playbook.yaml
 ```
+### or just hba:
+```bash
+ansible-playbook -i inventory.yaml postgres-playbook.yaml --tags "pg_hba"
+```
 
 ## Run redis
 ```bash
