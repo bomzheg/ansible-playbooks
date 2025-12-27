@@ -53,6 +53,8 @@
             databases: shvatka
           - users: postgres
             databases: "all"
+          - users: pblgblk_calendar
+            database: pblgblk_calendar
       notify: Restart postgresql
 
   handlers:
