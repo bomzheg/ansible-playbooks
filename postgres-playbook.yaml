@@ -16,7 +16,7 @@
 
     - name: Install Postgres
       ansible.builtin.apt:
-        name: postgresql=16+256.pgdg22.04+1
+        name: postgresql=18+290.pgdg22.04+1
         update_cache: true
 
     - name: Run Postgres
