@@ -2,6 +2,40 @@
   hosts: prepared
   become: true
   tasks:
+    - name: Install ipset
+      ansible.builtin.apt:
+        name: ipset
+        state: present
+        update_cache: true
+
+    - name: Create RU networks ipset
+      ansible.builtin.command:
+        cmd: ipset create ru_networks hash:net
+      register: ipset_result
+      failed_when:
+        - ipset_result.rc != 0
+        - "'already exists' not in ipset_result.stderr"
+      changed_when: ipset_result.rc == 0
+
+    - name: Add RU networks to ipset
+      ansible.builtin.command:
+        cmd: "ipset add ru_networks {{ item }}"
+      loop: "{{ lookup('file', 'resources/ru_networks.txt').splitlines() }}"
+      when: item | trim | length > 0
+
+    - name: Block forwarded connections to RU
+      ansible.builtin.iptables:
+        chain: FORWARD
+        match_set: ru_networks
+        match_set_flags: dst
+        jump: DROP
+
+    - name: Allow established forwarded connections
+      ansible.builtin.iptables:
+        chain: FORWARD
+        ctstate: ESTABLISHED,RELATED
+        jump: ACCEPT
+
     - name: Allow output
       ansible.builtin.iptables:
         chain: OUTPUT
