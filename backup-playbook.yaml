@@ -52,22 +52,15 @@
           loop: "{{ databases }}"
 
         - name: Dump PostgreSQL databases
-          ansible.builtin.command:
-            argv:
-              - pg_dump
-              - -f
-              - "{{ backup_temp.path }}/{{ item }}/"
-              - -U
-              - "{{ postgres_user }}"
-              - -h
-              - localhost
-              - -F
-              - d
-              - --no-owner
-              - --no-privileges
-              - -d
-              - "{{ item }}"
-          become_user: "{{ postgres_user }}"
+          ansible.builtin.shell:
+            cmd: |
+              runuser -u postgres -- pg_dump \
+                -f '{{ backup_temp.path }}/{{ item }}/' \
+                -U postgres \
+                -F d \
+                --no-owner \
+                --no-privileges \
+                -d '{{ item }}'
           loop: "{{ databases }}"
           loop_control:
             label: "{{ item }}"
