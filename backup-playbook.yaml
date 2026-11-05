@@ -1,0 +1,112 @@
+---
+- name: Backup VPS databases and Shvatka files
+  hosts: prepared
+  become: true
+  gather_facts: true
+
+  vars:
+    backup_timestamp: "{{ ansible_date_time.iso8601_basic_short }}"
+
+    backup_local_dir: "./backups"
+    backup_remote_prefix: "/tmp/vps-backup"
+
+    postgres_user: postgres
+
+    databases:
+      - karmabot
+      - shvatka
+      - changebot
+
+    shvatka_files: /home/bomzheg/projects/Shvatka/files
+
+  tasks:
+    - name: Create local backup directory
+      ansible.builtin.file:
+        path: "{{ backup_local_dir }}"
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+      become: false
+
+    - name: Create temporary remote directory
+      ansible.builtin.tempfile:
+        state: directory
+        path: /tmp
+        prefix: vps-backup-
+      register: backup_temp
+
+    - name: Make temporary directory accessible
+      ansible.builtin.file:
+        path: "{{ backup_temp.path }}"
+        mode: "0755"
+
+    - name: Prepare and download backup
+      block:
+
+        - name: Create database dump directories
+          ansible.builtin.file:
+            path: "{{ backup_temp.path }}/{{ item }}"
+            state: directory
+            owner: "{{ postgres_user }}"
+            mode: "0700"
+          loop: "{{ databases }}"
+
+        - name: Dump PostgreSQL databases
+          ansible.builtin.command:
+            argv:
+              - pg_dump
+              - -f
+              - "{{ backup_temp.path }}/{{ item }}/"
+              - -U
+              - "{{ postgres_user }}"
+              - -h
+              - localhost
+              - -F
+              - d
+              - --no-owner
+              - --no-privileges
+              - -d
+              - "{{ item }}"
+          become_user: "{{ postgres_user }}"
+          loop: "{{ databases }}"
+          loop_control:
+            label: "{{ item }}"
+
+        - name: Include Shvatka files
+          ansible.builtin.command:
+            argv:
+              - cp
+              - -a
+              - "{{ shvatka_files }}"
+              - "{{ backup_temp.path }}/files"
+
+        - name: Create compressed archive
+          ansible.builtin.command:
+            argv:
+              - tar
+              - -czf
+              - "{{ backup_temp.path }}.tar.gz"
+              - -C
+              - "{{ backup_temp.path }}"
+              - karmabot
+              - shvatka
+              - changebot
+              - files
+
+        - name: Download archive to Ansible controller
+          ansible.builtin.fetch:
+            src: "{{ backup_temp.path }}.tar.gz"
+            dest: "{{ backup_local_dir }}/backup-{{ backup_timestamp }}.tar.gz"
+            flat: true
+
+      always:
+
+        - name: Remove temporary remote directory
+          ansible.builtin.file:
+            path: "{{ backup_temp.path }}"
+            state: absent
+
+        - name: Remove remote archive
+          ansible.builtin.file:
+            path: "{{ backup_temp.path }}.tar.gz"
+            state: absent
