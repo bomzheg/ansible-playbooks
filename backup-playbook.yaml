@@ -67,6 +67,13 @@
             mode: "0700"
           loop: "{{ databases }}"
 
+        - name: Show backup locations
+          ansible.builtin.debug:
+            msg:
+              - "Remote temporary directory: {{ backup_temp.path }}"
+              - "Remote archive: {{ backup_temp.path }}.tar.gz"
+              - "Local destination: {{ backup_local_dir }}/backup-{{ backup_timestamp }}.tar.gz"
+
         - name: Dump PostgreSQL databases
           ansible.builtin.shell:
             cmd: |
@@ -191,11 +198,16 @@
               - grafana
               - victoria-metrics
 
-        - name: Download archive to Ansible controller
-          ansible.builtin.fetch:
-            src: "{{ backup_temp.path }}.tar.gz"
-            dest: "{{ backup_local_dir }}/backup-{{ backup_timestamp }}.tar.gz"
-            flat: true
+        - name: Download archive to Ansible controller using SCP
+          ansible.builtin.command:
+            argv:
+              - scp
+              - -o
+              - StrictHostKeyChecking=accept-new
+              - "{{ ansible_user }}@{{ ansible_host | default(inventory_hostname) }}:{{ backup_temp.path }}.tar.gz"
+              - "{{ backup_local_dir }}/backup-{{ backup_timestamp }}.tar.gz"
+          delegate_to: localhost
+          become: false
 
       always:
 
