@@ -1,5 +1,5 @@
 ---
-- name: Backup VPS databases and Shvatka files
+- name: Backup VPS databases, files and monitoring
   hosts: prepared
   become: true
   gather_facts: true
@@ -18,6 +18,22 @@
       - changebot
 
     shvatka_files: /home/bomzheg/projects/Shvatka/files
+
+    # Grafana
+    grafana_service: grafana-server
+    grafana_data_dir: /var/lib/grafana
+    grafana_config_dir: /etc/grafana
+
+    # VictoriaMetrics
+    victoria_metrics_version: "v1.93.5"
+    victoria_metrics_archive: "vmutils-linux-amd64-{{ victoria_metrics_version }}.tar.gz"
+    victoria_metrics_download_url: >-
+      https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/{{ victoria_metrics_version }}/{{ victoria_metrics_archive }}
+
+    victoria_metrics_storage: /var/lib/victoria-metrics
+    victoria_metrics_user: victoriametrics
+    victoria_metrics_snapshot_url: http://localhost:8428/snapshot/create
+    victoria_metrics_backup_binary: /usr/local/bin/vmbackup-prod
 
   tasks:
     - name: Create local backup directory
@@ -73,6 +89,93 @@
               - "{{ shvatka_files }}"
               - "{{ backup_temp.path }}/files"
 
+        - name: Create Grafana backup directories
+          ansible.builtin.file:
+            path: "{{ backup_temp.path }}/grafana/{{ item }}"
+            state: directory
+            mode: "0700"
+          loop:
+            - data
+            - etc
+
+        - name: Stop Grafana before backing up SQLite database
+          ansible.builtin.service:
+            name: "{{ grafana_service }}"
+            state: stopped
+
+        - name: Backup Grafana
+          block:
+
+            - name: Copy Grafana data directory
+              ansible.builtin.command:
+                argv:
+                  - cp
+                  - -a
+                  - "{{ grafana_data_dir }}/."
+                  - "{{ backup_temp.path }}/grafana/data/"
+
+            - name: Copy Grafana configuration
+              ansible.builtin.command:
+                argv:
+                  - cp
+                  - -a
+                  - "{{ grafana_config_dir }}/."
+                  - "{{ backup_temp.path }}/grafana/etc/"
+
+          always:
+
+            - name: Start Grafana after backup
+              ansible.builtin.service:
+                name: "{{ grafana_service }}"
+                state: started
+
+        - name: Download VictoriaMetrics utilities
+          ansible.builtin.get_url:
+            url: "{{ victoria_metrics_download_url }}"
+            dest: "{{ backup_temp.path }}/{{ victoria_metrics_archive }}"
+            mode: "0644"
+
+        - name: Create VictoriaMetrics utilities extraction directory
+          ansible.builtin.file:
+            path: "{{ backup_temp.path }}/vmutils"
+            state: directory
+            mode: "0755"
+
+        - name: Extract VictoriaMetrics utilities
+          ansible.builtin.unarchive:
+            src: "{{ backup_temp.path }}/{{ victoria_metrics_archive }}"
+            dest: "{{ backup_temp.path }}/vmutils"
+            remote_src: true
+
+        - name: Install vmbackup-prod
+          ansible.builtin.copy:
+            src: "{{ backup_temp.path }}/vmutils/vmbackup-prod"
+            dest: "{{ victoria_metrics_backup_binary }}"
+            remote_src: true
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Create VictoriaMetrics backup directory
+          ansible.builtin.file:
+            path: "{{ backup_temp.path }}/victoria-metrics"
+            state: directory
+            owner: "{{ victoria_metrics_user }}"
+            group: "{{ victoria_metrics_user }}"
+            mode: "0700"
+
+        - name: Backup VictoriaMetrics using snapshot
+          ansible.builtin.command:
+            argv:
+              - runuser
+              - -u
+              - "{{ victoria_metrics_user }}"
+              - --
+              - "{{ victoria_metrics_backup_binary }}"
+              - "-storageDataPath={{ victoria_metrics_storage }}"
+              - "-snapshot.createURL={{ victoria_metrics_snapshot_url }}"
+              - "-dst=fs://{{ backup_temp.path }}/victoria-metrics"
+
         - name: Create compressed archive
           ansible.builtin.command:
             argv:
@@ -85,6 +188,8 @@
               - shvatka
               - changebot
               - files
+              - grafana
+              - victoria-metrics
 
         - name: Download archive to Ansible controller
           ansible.builtin.fetch:
